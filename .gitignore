@@ -1,0 +1,7 @@
+.idea/
+venv/
+*.docx
+*.json
+*.pyc
+!__info/Empty_Ref.docx
+Release/
