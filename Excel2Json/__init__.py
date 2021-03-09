@@ -52,6 +52,7 @@ class E2J:
     # 核心思想：发现同级别的数据单元时，将栈中同级的数据块填写到上一级块中的缓存单元中
     # eg：当前到Level2，又发现一个符合Level2的单元时，将当前的Level2压入上一层的Level1中的Level list中
     def _state_machine(self, rows):
+        next(rows)
         for row in rows:
             level = self._state_machine_level_check(row)
             if level:
