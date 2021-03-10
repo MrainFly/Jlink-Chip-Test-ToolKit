@@ -30,26 +30,25 @@ def device_generator():
                 dev["Class"] = cla["Level"]
                 venus_device.append(dev)
 
-    def _sort_func(elem):
-        return int(elem["Address Start"], base=16)
-
-    venus_device.sort(key=_sort_func, reverse=True)
+    # def _sort_func(elem):
+    #     return int(elem["Address Start"], base=16)
+    #
+    # venus_device.sort(key=_sort_func, reverse=True)
 
     return venus_device
 
 
 if __name__ == "__main__":
     root = tkinter.Tk()
-    # style = ttk.Style()
-    # style.configure(".", font=('Helvetica', 8), foreground="white")
-    # style.configure("Treeview", foreground='red')
-    # style.configure("Treeview.Heading", foreground='green')  # <----
+    root.title("ListenAI Jlink Tool")
+    root.geometry("800x800")
+    style = ttk.Style()
+    style.configure(".", font=('Helvetica', 8))
+    style.configure("Treeview", foreground='red')
+    style.configure("Treeview.Heading", foreground='green')  # <----
+
+    RegTree(root, device_generator()).grid(column=0, row=0, sticky="nsew")
     tkinter.Grid.rowconfigure(root, 0, weight=1)
     tkinter.Grid.columnconfigure(root, 0, weight=1)
 
-    tkinter.Grid.columnconfigure(root, 1, weight=1)
-
-    treeframe = RegTree(root, device_generator())
-    treeframe.grid(column=0, row=0, sticky="nsew")
-    tkinter.Frame().grid(row=0, column=1, sticky="nsew")
     root.mainloop()
