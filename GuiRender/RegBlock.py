@@ -3,9 +3,12 @@ import tkinter
 import logging
 from tkinter import ttk
 from PIL import Image, ImageTk
+from SWDJlink import SelfSWD
+import re
 
 REGBLOCK_WIDTH = 1600
 REGBLOCK_HEIGHT = 800
+MY_SWD = SelfSWD()
 
 
 class ScrollbarFrame(ttk.Frame):
@@ -267,7 +270,12 @@ class RegBlock(ttk.Frame):
         logging.info("write")
 
     def _regblock_read(self):
-        logging.info("read")
+        global MY_SWD
+        addr = int(re.sub(r"\|.*", "", self._address_field_label.cget("text")).strip(), base=16)
+        value = MY_SWD.read32(addr)
+        logging.info("Read address: %s --> %s" % (str(hex(addr)), str(hex(value[-1]))))
+        self._input_entry.delete(first=0, last=tkinter.END)
+        self._input_entry.insert(0, hex(value[-1]))
 
     def _regblock_delete(self):
         logging.info("delete")
@@ -275,22 +283,4 @@ class RegBlock(ttk.Frame):
 
 
 if __name__ == "__main__":
-    _columns_seq = ("Name", "Address", "Field", "Property")
-    root = tkinter.Tk()
-    # a = ttk.LabelFrame(root, text="HelloWorld")
-    # a.pack()
-    # ttk.Button(a, text="click").pack()
-    RegBlock(root, _columns_seq).grid(column=0, row=0, sticky="nsew")
-    # tree = ttk.Treeview(root, columns=_columns_seq)
-    # tree.insert("", 0, "Level1", text="Level1")
-    # tree.insert("Level1", 1, "Level2", text="Level2")
-    # tree.insert("Level2", 2, "Level3", text="Level3\nwode")
-    # tree.grid()
-    #
-    # tree = ttk.Treeview(root, columns=_columns_seq)
-    # tree.insert("", 0, "Level1-1", text="Level1")
-    # tree.insert("Level1", 1, "Level2-1", text="Level2")
-    # tree.insert("Level2", 2, "Level3-1", text="Level3\nwode")
-    # tree.grid()
-
-    root.mainloop()
+    pass

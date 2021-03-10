@@ -4,6 +4,7 @@ import logging
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 
+
 def device_generator():
     memory_header = [{"Key": "Address Start", "Level": (1, )},
                      {"Key": "Module", "Level": (1, 0)},
