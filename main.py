@@ -1,8 +1,10 @@
-from Excel2Json import E2J
-import GuiRender
 import logging
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+from Excel2Json import E2J
+import GuiRender
 
 
 def device_generator():
@@ -40,5 +42,4 @@ def device_generator():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     GuiRender.GUIBody(device_generator())

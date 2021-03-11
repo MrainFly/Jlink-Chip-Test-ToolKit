@@ -8,7 +8,7 @@ class SelfSWD(pylink.JLink):
         self.open()
         self.set_tif(pylink.enums.JLinkInterfaces.SWD)
         self.connect("CORTEX-M33")
-        # logging.info("Connect to the target")
+        logging.info("Connect to the target")
 
     def __del__(self):
         self.close()
@@ -19,4 +19,4 @@ class SelfSWD(pylink.JLink):
 
 if __name__ == "__main__":
     swd = SelfSWD()
-    print(swd.read32(0x45000000))
+    print(swd.read32(0x46000000))

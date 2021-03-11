@@ -8,6 +8,7 @@ class GUIBody:
         self._root.title("ListenAI Jlink Tool")
         self._root.geometry("1600x800")
         self._root.resizable(width=False, height=False)
+        self._root.wm_attributes("-topmost", 1)
 
         self._regtree = RegBlock.RegTree(self._root, para)
         self._regtree.grid(row=0, column=0, sticky="news")
