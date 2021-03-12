@@ -31,7 +31,13 @@ class EntryPopup(ttk.Entry):
 
     def on_return(self, event):
         values = list(self.tv.item(self.iid, "values"))
-        values[-1] = self.get()
+        # Write the value from the entry into corresponding address
+        # Get the address information
+        tpl = self.tv._parse_address(values[0])
+        self.tv._SWD.write32_plus(tpl, self.get())
+        # Read the corresponding address again
+        values[-1] = hex(self.tv._SWD.read32_plus(tpl))
+
         self.tv.item(self.iid, values=values)
         self.destroy()
 
@@ -505,82 +511,82 @@ class RegTree(ttk.Frame):
     #     return 'break'
 
 
-class RegBlockGen:
-    def __init__(self, master):
-        self._row = 0
-        self._master = master
-        self._header = ttk.Frame(self._master)
+# class RegBlockGen:
+#     def __init__(self, master):
+#         self._row = 0
+#         self._master = master
+#         self._header = ttk.Frame(self._master)
+#
+#     def generate(self, para):
+#         RegBlock(self._master, para).grid(column=0, row=self._row, sticky="nsew")
+#         self._row += 1
+#
+#     def _read_value(self):
+#         pass
 
-    def generate(self, para):
-        RegBlock(self._master, para).grid(column=0, row=self._row, sticky="nsew")
-        self._row += 1
 
-    def _read_value(self):
-        pass
-
-
-# Create 5 lable: "Name", "Address/Field", "Property", "Value", empty for operate
-class RegBlock(ttk.Frame):
-
-    # MY_SWD = SelfSWD()
-
-    def __init__(self, master, para):  # name, af, prop, image
-        ttk.Frame.__init__(self, master)
-        self._device_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/device.png").
-                                                     resize((20, 20), Image.ANTIALIAS))
-        self._register_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/register.png").
-                                                       resize((20, 20), Image.ANTIALIAS))
-        self._field_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/field.png").
-                                                    resize((20, 20), Image.ANTIALIAS))
-        self._image_mapping = {"pyimage1": self._device_full_image, "pyimage2": self._register_full_image,
-                               "pyimage3": self._field_full_image}
-
-        # Name label
-        self._name_label = ttk.Label(self, text=para[0], borderwidth=5, relief=tkinter.GROOVE, width="20",
-                                     compound="left", image=self._image_mapping[para[3]])
-        self._name_label.grid(row=0, column=0, sticky="nwse")
-
-        # Address & Field label
-        self._address_field_label = ttk.Label(self, text=para[1], borderwidth=5, relief=tkinter.GROOVE, width="20")
-        self._address_field_label.grid(row=0, column=1, sticky="nwse")
-
-        # Property label
-        self._property_label = ttk.Label(self, text=para[2], borderwidth=5, relief=tkinter.GROOVE, width="6")
-        self._property_label.grid(row=0, column=2, sticky="nwse")
-
-        # Input entry
-        self._input_entry = ttk.Entry(self, width="25")
-        self._input_entry.grid(row=0, column=3, sticky="nwse")
-        self._input_entry.bind("<Return>", self._regblock_return)
-
-        # Write button
-        self._write_button = ttk.Button(self, text="Write", command=self._regblock_write, width="10")
-        self._write_button.grid(row=0, column=4, sticky="nwse")
-
-        # Read button
-        self._read_button = ttk.Button(self, text="Read", command=self._regblock_read, width="10")
-        self._read_button.grid(row=0, column=5, sticky="nwse")
-
-        # Delete button
-        self._delete_button = ttk.Button(self, text="Delete", command=self._regblock_delete, width="10")
-        self._delete_button.grid(row=0, column=6, sticky="nwse")
-
-    def _regblock_return(self, event):
-        self._regblock_write()
-
-    def _regblock_write(self):
-        logging.info("write")
-
-    def _regblock_read(self):
-        addr = int(re.sub(r"\|.*", "", self._address_field_label.cget("text")).strip(), base=16)
-        value = RegBlock.MY_SWD.read32(addr)
-        logging.info("Read address: %s --> %s" % (str(hex(addr)), str(hex(value[-1]))))
-        self._input_entry.delete(first=0, last=tkinter.END)
-        self._input_entry.insert(0, hex(value[-1]))
-
-    def _regblock_delete(self):
-        logging.info("delete")
-        self.grid_forget()
+# # Create 5 lable: "Name", "Address/Field", "Property", "Value", empty for operate
+# class RegBlock(ttk.Frame):
+#
+#     # MY_SWD = SelfSWD()
+#
+#     def __init__(self, master, para):  # name, af, prop, image
+#         ttk.Frame.__init__(self, master)
+#         self._device_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/device.png").
+#                                                      resize((20, 20), Image.ANTIALIAS))
+#         self._register_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/register.png").
+#                                                        resize((20, 20), Image.ANTIALIAS))
+#         self._field_full_image = ImageTk.PhotoImage(Image.open("./GuiRender/field.png").
+#                                                     resize((20, 20), Image.ANTIALIAS))
+#         self._image_mapping = {"pyimage1": self._device_full_image, "pyimage2": self._register_full_image,
+#                                "pyimage3": self._field_full_image}
+#
+#         # Name label
+#         self._name_label = ttk.Label(self, text=para[0], borderwidth=5, relief=tkinter.GROOVE, width="20",
+#                                      compound="left", image=self._image_mapping[para[3]])
+#         self._name_label.grid(row=0, column=0, sticky="nwse")
+#
+#         # Address & Field label
+#         self._address_field_label = ttk.Label(self, text=para[1], borderwidth=5, relief=tkinter.GROOVE, width="20")
+#         self._address_field_label.grid(row=0, column=1, sticky="nwse")
+#
+#         # Property label
+#         self._property_label = ttk.Label(self, text=para[2], borderwidth=5, relief=tkinter.GROOVE, width="6")
+#         self._property_label.grid(row=0, column=2, sticky="nwse")
+#
+#         # Input entry
+#         self._input_entry = ttk.Entry(self, width="25")
+#         self._input_entry.grid(row=0, column=3, sticky="nwse")
+#         self._input_entry.bind("<Return>", self._regblock_return)
+#
+#         # Write button
+#         self._write_button = ttk.Button(self, text="Write", command=self._regblock_write, width="10")
+#         self._write_button.grid(row=0, column=4, sticky="nwse")
+#
+#         # Read button
+#         self._read_button = ttk.Button(self, text="Read", command=self._regblock_read, width="10")
+#         self._read_button.grid(row=0, column=5, sticky="nwse")
+#
+#         # Delete button
+#         self._delete_button = ttk.Button(self, text="Delete", command=self._regblock_delete, width="10")
+#         self._delete_button.grid(row=0, column=6, sticky="nwse")
+#
+#     def _regblock_return(self, event):
+#         self._regblock_write()
+#
+#     def _regblock_write(self):
+#         logging.info("write")
+#
+#     def _regblock_read(self):
+#         addr = int(re.sub(r"\|.*", "", self._address_field_label.cget("text")).strip(), base=16)
+#         value = RegBlock.MY_SWD.read32(addr)
+#         logging.info("Read address: %s --> %s" % (str(hex(addr)), str(hex(value[-1]))))
+#         self._input_entry.delete(first=0, last=tkinter.END)
+#         self._input_entry.insert(0, hex(value[-1]))
+#
+#     def _regblock_delete(self):
+#         logging.info("delete")
+#         self.grid_forget()
 
 
 if __name__ == "__main__":
