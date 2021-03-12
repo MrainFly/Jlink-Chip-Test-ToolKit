@@ -96,7 +96,11 @@ class ModifyTree(ttk.Treeview):
         # Pop up entry handler
         self._entryPopup = None
         # SWD class
-        self._SWD = SelfSWD()
+        try:
+            self._SWD = SelfSWD()
+        except:
+            # Can't open SWD
+            self._SWD = None
 
         # Image
         self._image_tag = (ImageTk.PhotoImage(Image.open("./GuiRender/device.png").resize((20, 20), Image.ANTIALIAS)),

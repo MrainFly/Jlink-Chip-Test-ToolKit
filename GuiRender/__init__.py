@@ -1,10 +1,10 @@
-from ttkthemes import ThemedTk
+import tkinter
 from GuiRender import RegBlock
 
 
 class GUIBody:
     def __init__(self, para):
-        self._root = ThemedTk("blue")
+        self._root = tkinter.Tk()
         self._root.title("ListenAI Jlink Tool")
         self._root.geometry("1600x800")
         self._root.resizable(width=False, height=False)
