@@ -97,9 +97,9 @@ class ModifyTree(ttk.Treeview):
         self._control_handler = control
 
         # Image
-        self._image_tag = (ImageTk.PhotoImage(Image.open("./GuiRender/device.png").resize((20, 20), Image.ANTIALIAS)),
-                           ImageTk.PhotoImage(Image.open("./GuiRender/register.png").resize((20, 20), Image.ANTIALIAS)),
-                           ImageTk.PhotoImage(Image.open("./GuiRender/field.png").resize((20, 20), Image.ANTIALIAS))
+        self._image_tag = (ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/device.png").resize((20, 20), Image.ANTIALIAS)),
+                           ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/register.png").resize((20, 20), Image.ANTIALIAS)),
+                           ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/field.png").resize((20, 20), Image.ANTIALIAS))
                            )
 
         # Edit the heading
@@ -218,9 +218,9 @@ class DisplayTree(ttk.Treeview):
         self.column(self._top_columns[2], width=self._top_columns_width[3], minwidth="25", anchor="center")
 
         # Image
-        self._image_tag = (ImageTk.PhotoImage(Image.open("./GuiRender/device.png").resize((20, 20), Image.ANTIALIAS)),
-                           ImageTk.PhotoImage(Image.open("./GuiRender/register.png").resize((20, 20), Image.ANTIALIAS)),
-                           ImageTk.PhotoImage(Image.open("./GuiRender/field.png").resize((20, 20), Image.ANTIALIAS))
+        self._image_tag = (ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/device.png").resize((20, 20), Image.ANTIALIAS)),
+                           ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/register.png").resize((20, 20), Image.ANTIALIAS)),
+                           ImageTk.PhotoImage(Image.open("./GuiRender/.image/.treeview/field.png").resize((20, 20), Image.ANTIALIAS))
                            )
 
         # Tree root
@@ -348,6 +348,16 @@ class DisplayTree(ttk.Treeview):
         return 'break'
 
 
+class FlatButton(tkinter.Button):
+    def __init__(self, master, **kwargs):
+        super(FlatButton, self).__init__(master, relief=tkinter.FLAT, activebackground="#4c5052", bg="#3c3f41", highlightcolor="#4c5052", takefocus=True, **kwargs)
+
+
+class DarkLabel(tkinter.Label):
+    def __init__(self, master, **kwargs):
+        super(DarkLabel, self).__init__(master, relief=tkinter.FLAT, bg="#3c3f41", **kwargs)
+
+
 class StageButton(ttk.Frame):
     def __init__(self, master, control, **kwargs):
 
@@ -355,25 +365,59 @@ class StageButton(ttk.Frame):
 
         self._control_handler = control
 
-        self._connect_image = ImageTk.PhotoImage(Image.open("./GuiRender/connect.png").resize((20, 20), Image.ANTIALIAS))
-        self._disconnect_image = ImageTk.PhotoImage(Image.open("./GuiRender/disconnect.png").resize((20, 20), Image.ANTIALIAS))
+        # Open image
+        self._open_image = ImageTk.PhotoImage(Image.open("./GuiRender/.image/.connect/play.png").resize((16, 16), Image.ANTIALIAS))
+        self._open_dark_image = ImageTk.PhotoImage(
+            Image.open("./GuiRender/.image/.connect/play-dark.png").resize((16, 16), Image.ANTIALIAS))
+        self._connect_image = ImageTk.PhotoImage(
+            Image.open("./GuiRender/.image/.connect/connect.png").resize((16, 16), Image.ANTIALIAS))
 
-        self._connect_button = ttk.Button(self, text="connect", style="DisStage.TButton", width="15", compound=tkinter.LEFT, image=self._disconnect_image, command=self._connect)
-        self._connect_button.grid(row=0, column=0, sticky="nswe", padx="10", pady="2")
+        # Stop image
+        self._stop_image = ImageTk.PhotoImage(Image.open("./GuiRender/.image/.disconnect/stop.png").resize((16, 16), Image.ANTIALIAS))
+        self._stop_dark_image = ImageTk.PhotoImage(
+            Image.open("./GuiRender/.image/.disconnect/stop-dark.png").resize((16, 16), Image.ANTIALIAS))
+        self._disconnect_image = ImageTk.PhotoImage(
+            Image.open("./GuiRender/.image/.disconnect/disconnect.png").resize((16, 16), Image.ANTIALIAS))
 
-        # self._connect_stage_label = ttk.Label(self, text="Disconnect", style="Stage.TLabel", width="10")
-        # self._connect_stage_label.grid(row=0, column=1, sticky="nswe", padx="10", pady="2")
+        # Refresh image
+        self._refresh_image = ImageTk.PhotoImage(Image.open("./GuiRender/.image/.refresh/refresh.png").resize((16, 16), Image.ANTIALIAS))
+        self._refresh_dark_image = ImageTk.PhotoImage(
+            Image.open("./GuiRender/.image/.refresh/refresh-dark.png").resize((16, 16), Image.ANTIALIAS))
 
-        self._refresh_button = ttk.Button(self, text="refresh", style="Stage.TButton")
-        self._refresh_button.grid(row=0, column=2, sticky="nswe", padx="10", pady="2")
+        # Control frame
+        self._control_button_frame = tkinter.Frame(self, bg="#3c3f41")
+        self._control_button_frame.pack(side="right", padx="4", fill="x")
 
-        self._auto_radio_button = ttk.Radiobutton(self, text="auto", style="Stage.TRadiobutton")
-        self._auto_radio_button.grid(row=0, column=3, sticky="nswe", padx="10", pady="2")
+        # Connect button
+        self._connect_button = FlatButton(self._control_button_frame, image=self._open_image, command=self._connect)
+        self._connect_button.grid(row=0, column=0, sticky="nswe", padx="4", pady="2")
+
+        # Refresh button
+        self._refresh_button = FlatButton(self._control_button_frame, image=self._refresh_dark_image, command=self._refresh)
+        self._refresh_button.grid(row=0, column=1, sticky="nswe", padx="4", pady="2")
+
+        # Stop button
+        self._disconnect_button = FlatButton(self._control_button_frame, image=self._stop_dark_image, command=self._disconnect)
+        self._disconnect_button.grid(row=0, column=2, sticky="nswe", padx="4", pady="2")
+
+        # Separator
+        ttk.Separator(self._control_button_frame, orient=tkinter.VERTICAL).grid(row=0, column=3, sticky="ns", pady="4")
+
+        # Stage label
+        self._stage_label = DarkLabel(self._control_button_frame, image=self._disconnect_image)
+        self._stage_label.grid(row=0, column=4, sticky="nswe", padx="4", pady="2")
+        # tkinter.Button(self, image=self._refresh_image, relief=tkinter.FLAT, activebackground="#4c5052", bg="#3c3f41").pack(side="left")
 
     def _connect(self):
         if self._control_handler.connect():
-            self._connect_button.configure(style="Stage.TButton")
-            self._connect_button.configure(image=self._connect_image)
+            self._connect_button.configure(style="Stage.TButton", image=self._connect_image, text="connect")
+            self._connect_button.configure()
+
+    def _refresh(self):
+        pass
+
+    def _disconnect(self):
+        pass
 
 
 class DscpFrame(ttk.Frame):

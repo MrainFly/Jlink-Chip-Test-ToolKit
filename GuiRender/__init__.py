@@ -13,7 +13,7 @@ class GUIBody:
         self._root.wm_attributes("-topmost", 1)
 
         # Configure style
-        self._base_style()
+        # self._base_style()
         self._control_handler = Control()
 
         self._regtree = RegBlock.RegTree(self._root, self._control_handler, para)
@@ -22,30 +22,17 @@ class GUIBody:
 
         self._root.mainloop()
 
-    def _base_style(self):
-        style = ttk.Style()
-        style.configure("Stage.TButton",
-                        font=("Helvetica", 18),
-                        background="green",
-                        foreground="green",
-                        borderwidth="5",
-                        relief="RAISED",
-                        )
-        style.configure("DisStage.TButton",
-                        font=("Helvetica", 18),
-                        background="red",
-                        foreground="red",
-                        borderwidth="5",
-                        relief="RAISED",
-                        )
-        style.configure("Stage.TLabel",
-                        font=("Helvetica", 14),
-                        justify=tkinter.CENTER,
-                        )
-        style.configure("Stage.TRadiobutton",
-                        font=("Helvetica", 18),
-                        justify=tkinter.CENTER,
-                        )
+    # def _base_style(self):
+        # style = ttk.Style()
+        # style.configure("TButton",
+        #                 background="#3c3f41",
+        #                 relief=tkinter.FLAT,
+        #                 highlightcolor="#3c3f41"
+        #                 )
+        # style.map("Flat.TButton",
+        #           highlightcolor=[("!focus", "#3c3f41"),
+        #                           ("focus", "#4c5052")],
+        #           )
 
 
 if __name__ == "__main__":

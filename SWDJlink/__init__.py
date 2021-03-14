@@ -4,7 +4,7 @@ import logging
 
 class SelfSWD(pylink.JLink):
     def __init__(self):
-        pylink.JLink.__init__(self)
+        super(SelfSWD, self).__init__()
         self.open()
         self.set_tif(pylink.enums.JLinkInterfaces.SWD)
         self.connect("CORTEX-M33")
