@@ -1,10 +1,10 @@
 import logging
+from Excel2Json import E2J
+import GuiRender
+
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
-from Excel2Json import E2J
-import GuiRender
 
 
 def device_generator():
@@ -36,7 +36,7 @@ def device_generator():
     def _sort_func(elem):
         return int(elem["Address Start"], base=16)
 
-    venus_device.sort(key=_sort_func, reverse=True)
+    venus_device.sort(key=_sort_func, reverse=False)
 
     return venus_device
 

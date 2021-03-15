@@ -15,10 +15,6 @@ class EntryPopup(ttk.Entry):
 
         self.insert(0, text)
 
-        # self['state'] = 'readonly'
-        # self['readonlybackground'] = 'white'
-        # self['selectbackground'] = '#1BA1E2'
-
         self['exportselection'] = False
 
         self.focus_force()
@@ -127,6 +123,9 @@ class ModifyTree(ttk.Treeview):
         # re parse pattern
         self._pattern = re.compile(r"(?P<Address>0x[0-9a-fA-F]+)[\s\|]*(?P<Field0>[0-9]*):*(?P<Field1>[0-9]*)")
 
+        # Registe the handler to control widget
+        self._control_handler.modify_tree_register(self)
+
     def generate(self, mid_value, level):
         self._level = level
         self._tree_root = mid_value
@@ -184,10 +183,13 @@ class ModifyTree(ttk.Treeview):
         # place Entry popup properly
         text = self.item(rowid, "values")
 
-        self._entryPopup = EntryPopup(self, rowid, text[-1], width=self._top_columns_width[-1], justify=tkinter.CENTER)
+        self._entryPopup = EntryPopup(self, rowid, text[-1], control=self._control_handler, width=self._top_columns_width[-1], justify=tkinter.CENTER)
         self._entryPopup.place(x=x, y=y + pady, anchor=tkinter.W, width=self._top_columns_width[-1])
 
     def _double_click_(self, event):
+        item = self.focus()
+        if item:
+            self.delete(item)
         return 'break'
 
     def _destroy_pop_up(self):
@@ -241,6 +243,10 @@ class DisplayTree(ttk.Treeview):
         # Get the control handler
         self._control_handler = control
 
+        # Expand re
+        self._find_indexs_pattern = re.compile(r"\[(?P<Number>[0-9]+)\]")
+        self._locate_indexs_pattern = re.compile(r"<ARRAY_INDEX>")
+
         # Construct the TreeView
         for _sub in self._tree_root:
             if _sub:
@@ -260,7 +266,7 @@ class DisplayTree(ttk.Treeview):
             else:
                 # restore
                 self._level = 0
-                self._parent = [""]
+                self._parent = ""
                 self._address = 0
         # Level 1, 2 have another function to deal
         else:
@@ -281,6 +287,16 @@ class DisplayTree(ttk.Treeview):
                 else:
                     prop = ""
 
+                if self._level == 1:
+                    level = self._level
+                    parent = self._parent
+                    address = self._address
+                    if self._expand(i):
+                        self._level = level
+                        self._parent = parent
+                        self._address = address
+                        continue
+
                 # Insert information into tree view
                 self._cur_iid = self.insert(self._parent, "end", iid=None,
                                             text=i["Register\nName"], image=self._image_tag[self._level],
@@ -298,6 +314,82 @@ class DisplayTree(ttk.Treeview):
             # to get the current parent iid
             self._parent = self.parent(self._parent)
             self._level -= 1
+
+    def _expand(self, i):
+        rslt = self._find_indexs_pattern.search(i["Register\nName"])
+
+        # Search the indexs
+        if rslt:
+            # Collect the key in dictionary
+            if 'Sub-Addr\n(Hex)' in i.keys():
+                sub_addr = int(i['Sub-Addr\n(Hex)'], base=16) + self._address
+            else:
+                sub_addr = ""
+
+            if 'Start\nBit' and 'End\nBit' in i.keys():
+                field = "%d:%d" % (int(i['Start\nBit']), int(i['End\nBit']))
+            else:
+                field = ""
+
+            if 'R/W\nProperty' in i.keys():
+                prop = i['R/W\nProperty']
+            else:
+                prop = ""
+
+            for num in range(int(rslt.group("Number"))):
+
+                name = i["Register\nName"][0: rslt.span()[0]] + str(num)
+
+                self._cur_iid = self.insert(self._parent, "end", iid=None,
+                                            text=name,
+                                            image=self._image_tag[self._level],
+                                            values=(hex(sub_addr + 4*num) if sub_addr else sub_addr, field, prop),
+                                            tags=self._level
+                                            )
+
+                # Exist the children
+                if i["Level"]:
+                    self._parent = self._cur_iid
+                    self._level += 1
+                    # Recursive into the next level
+                    self._subexpand(i["Level"], num)
+
+            self._parent = self.parent(self._parent)
+            self._level -= 1
+
+            return True
+
+        else:
+            return False
+
+    def _subexpand(self, root, num):
+        for i in root:
+            # Collect the key in dictionary
+            if 'Sub-Addr\n(Hex)' in i.keys():
+                sub_addr = int(i['Sub-Addr\n(Hex)'], base=16) + self._address
+            else:
+                sub_addr = ""
+
+            if 'Start\nBit' and 'End\nBit' in i.keys():
+                field = "%d:%d" % (int(i['Start\nBit']), int(i['End\nBit']))
+            else:
+                field = ""
+
+            if 'R/W\nProperty' in i.keys():
+                prop = i['R/W\nProperty']
+            else:
+                prop = ""
+
+            name = self._locate_indexs_pattern.sub(str(num), i["Register\nName"])
+
+            # Insert information into tree view
+            self._cur_iid = self.insert(self._parent, "end", iid=None,
+                                        text=name, image=self._image_tag[self._level],
+                                        values=(hex(sub_addr) if sub_addr else sub_addr, field, prop),
+                                        tags=self._level)
+
+        self._parent = self.parent(self._parent)
+        self._level -= 1
 
     def _item_recursive(self, items):
         if not items:
@@ -350,12 +442,47 @@ class DisplayTree(ttk.Treeview):
 
 class FlatButton(tkinter.Button):
     def __init__(self, master, **kwargs):
+        self._hover_color = "#4c5052"
+        self._default_bg_color = "#3c3f41"
         super(FlatButton, self).__init__(master, relief=tkinter.FLAT, activebackground="#4c5052", bg="#3c3f41", highlightcolor="#4c5052", takefocus=True, **kwargs)
+        self.bind("<Enter>", self._on_enter)
+        self.bind("<Leave>", self._on_level)
+
+    def _on_enter(self, event):
+        self.configure(bg=self._hover_color)
+
+    def _on_level(self, event):
+        self.configure(bg=self._default_bg_color)
 
 
 class DarkLabel(tkinter.Label):
     def __init__(self, master, **kwargs):
         super(DarkLabel, self).__init__(master, relief=tkinter.FLAT, bg="#3c3f41", **kwargs)
+
+
+class AutoCheck(tkinter.Checkbutton):
+    def __init__(self, master, control, **kwargs):
+        self._default_font_color = "#a7a7a7"
+        self._inner_bg_color = "#43494a"
+        self._default_bg_color = "#3c3f41"
+        self.autovar = tkinter.StringVar()
+        super(AutoCheck, self).__init__(master, bg=self._default_bg_color, fg=self._default_font_color,
+                                        selectcolor=self._inner_bg_color,
+                                        activebackground=self._default_bg_color,
+                                        variable=self.autovar,
+                                        onvalue="auto",
+                                        offvalue="bluntness",
+                                        **kwargs)
+        self.deselect()
+        self._control_handler = control
+
+    def _click_callback(self):
+        if self.autovar.get() == "auto":
+            pass
+        elif self.autovar.get() == "bluntness":
+            pass
+        else:
+            pass
 
 
 class StageButton(ttk.Frame):
@@ -392,32 +519,42 @@ class StageButton(ttk.Frame):
         self._connect_button = FlatButton(self._control_button_frame, image=self._open_image, command=self._connect)
         self._connect_button.grid(row=0, column=0, sticky="nswe", padx="4", pady="2")
 
-        # Refresh button
-        self._refresh_button = FlatButton(self._control_button_frame, image=self._refresh_dark_image, command=self._refresh)
-        self._refresh_button.grid(row=0, column=1, sticky="nswe", padx="4", pady="2")
-
         # Stop button
         self._disconnect_button = FlatButton(self._control_button_frame, image=self._stop_dark_image, command=self._disconnect)
-        self._disconnect_button.grid(row=0, column=2, sticky="nswe", padx="4", pady="2")
+        self._disconnect_button.grid(row=0, column=1, sticky="nswe", padx="4", pady="2")
 
         # Separator
-        ttk.Separator(self._control_button_frame, orient=tkinter.VERTICAL).grid(row=0, column=3, sticky="ns", pady="4")
+        ttk.Separator(self._control_button_frame, orient=tkinter.VERTICAL).grid(row=0, column=2, sticky="ns", pady="4")
+
+        # Refresh button
+        self._refresh_button = FlatButton(self._control_button_frame, image=self._refresh_dark_image, command=self._refresh)
+        self._refresh_button.grid(row=0, column=3, sticky="nswe", padx="4", pady="2")
+
+        self._auto_check_button = AutoCheck(self._control_button_frame, self._control_handler)
+        self._auto_check_button.grid(row=0, column=4, sticky="nswe", padx="4", pady="2")
+
+        ttk.Separator(self._control_button_frame, orient=tkinter.VERTICAL).grid(row=0, column=5, sticky="ns", pady="4")
 
         # Stage label
         self._stage_label = DarkLabel(self._control_button_frame, image=self._disconnect_image)
-        self._stage_label.grid(row=0, column=4, sticky="nswe", padx="4", pady="2")
-        # tkinter.Button(self, image=self._refresh_image, relief=tkinter.FLAT, activebackground="#4c5052", bg="#3c3f41").pack(side="left")
+        self._stage_label.grid(row=0, column=6, sticky="nswe", padx="4", pady="2")
 
     def _connect(self):
         if self._control_handler.connect():
-            self._connect_button.configure(style="Stage.TButton", image=self._connect_image, text="connect")
-            self._connect_button.configure()
+            self._connect_button.configure(image=self._open_dark_image)
+            self._refresh_button.configure(image=self._refresh_image)
+            self._disconnect_button.configure(image=self._stop_image)
+            self._stage_label.configure(image=self._connect_image)
 
     def _refresh(self):
-        pass
+        self._control_handler.tree_refresh()
 
     def _disconnect(self):
-        pass
+        if self._control_handler.disconnect():
+            self._connect_button.configure(image=self._open_image)
+            self._refresh_button.configure(image=self._refresh_dark_image)
+            self._disconnect_button.configure(image=self._stop_dark_image)
+            self._stage_label.configure(image=self._disconnect_image)
 
 
 class DscpFrame(ttk.Frame):

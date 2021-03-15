@@ -7,13 +7,13 @@ import tkinter
 class GUIBody:
     def __init__(self, para):
         self._root = tkinter.Tk()
-        self._root.title("ListenAI Jlink Tool")
+        self._root.title("JG Kit")
         self._root.geometry("1600x800")
         self._root.resizable(width=False, height=False)
-        self._root.wm_attributes("-topmost", 1)
+        self._root.iconphoto(True, tkinter.PhotoImage(file="./GuiRender/.image/icon/exchange.png"))
 
         # Configure style
-        # self._base_style()
+        self._base_style()
         self._control_handler = Control()
 
         self._regtree = RegBlock.RegTree(self._root, self._control_handler, para)
@@ -22,7 +22,8 @@ class GUIBody:
 
         self._root.mainloop()
 
-    # def _base_style(self):
+    def _base_style(self):
+        pass
         # style = ttk.Style()
         # style.configure("TButton",
         #                 background="#3c3f41",

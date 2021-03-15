@@ -7,10 +7,15 @@ import logging
 class Control:
     def __init__(self):
         self._SWD = None
+        self._connected = False
+        # Modify Tree Handler
+        self._modify_tree_h = None
 
     def connect(self):
         try:
             self._SWD = SelfSWD()
+            self._connected = True
+            logging.info("Connect to the target CORTEX-M33")
         except:
             # Can't open SWD
             self._SWD = None
@@ -21,7 +26,17 @@ class Control:
         return True
 
     def connected(self):
-        return self._SWD.connected()
+        return self._connected
+
+    def disconnect(self):
+        if self.connected():
+            del self._SWD
+            self._connected = False
+            logging.info("Disconnect success")
+            return True
+        else:
+            logging.error("Need connect target first")
+            return False
 
     def write32_plus(self, tpl, data):
         if tpl[1] or tpl[2]:
@@ -59,3 +74,32 @@ class Control:
         mask.invert()
         mask = mask[1:]
         return mask.uint
+
+    def modify_tree_register(self, handler):
+        self._modify_tree_h = handler
+
+    def tree_refresh(self):
+        # Connect and obtain the modify tree handler
+        if self._modify_tree_h and self._connected:
+            # Get all the modify tree items
+            logging.info("Get the tree values")
+            self._sub_tree_refresh()
+
+    def _sub_tree_refresh(self, p=None):
+        items = self._modify_tree_h.get_children(p)
+        if not items:
+            return
+        for item in items:
+            # Get corresponding tree item information
+            dct = self._modify_tree_h.item(item)
+            # Ignore the level0
+            if dct["tags"][0] == 0:
+                pass
+            else:
+                # Get the corresponding address value again
+                value = str(hex(self.read32_plus(self._modify_tree_h.parse_address(dct["values"][0]))))
+                values = dct["values"]
+                values[-1] = value
+                # Reload
+                self._modify_tree_h.item(item, values=values)
+            self._sub_tree_refresh(item)
