@@ -147,6 +147,9 @@ class ModifyTree(ttk.Treeview):
             value = "NA"
             if self._level != 0:
                 value = str(hex(self._control_handler.read32_plus(self.parse_address(i["Address"]))))
+                # Trigger error return False
+                if not value:
+                    return
             self._cur_iid = self.insert(self._parent, "end", iid=None, text=i["Name"], image=self._image_tag[self._level], values=(i["Address"], i["Property"], value), tags=self._level)
             if i["Level"]:
                 self._level += 1
@@ -472,17 +475,20 @@ class AutoCheck(tkinter.Checkbutton):
                                         variable=self.autovar,
                                         onvalue="auto",
                                         offvalue="bluntness",
+                                        command=self._click_callback,
                                         **kwargs)
         self.deselect()
         self._control_handler = control
+        # Register itself to control module
+        self._control_handler.check_button_register(self)
 
     def _click_callback(self):
         if self.autovar.get() == "auto":
-            pass
+            self._control_handler.open_timer()
         elif self.autovar.get() == "bluntness":
-            pass
+            self._control_handler.close_timer()
         else:
-            pass
+            logging.error("Undefine value")
 
 
 class StageButton(ttk.Frame):

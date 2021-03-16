@@ -1,4 +1,5 @@
 import pylink
+from pylink import errors
 import logging
 
 
@@ -17,10 +18,18 @@ class SelfSWD(pylink.JLink):
         self.close()
 
     def read32(self, addr):
-        return self.memory_read32(addr, num_words=1)[0]
+        self.clear_error()
+        try:
+            return self.memory_read32(addr, num_words=1)[0]
+        except errors.JLinkReadException:
+            return False
 
     def write32(self, addr, data):
-        self.memory_write32(addr, [data])
+        self.clear_error()
+        try:
+            self.memory_write32(addr, [data])
+        except errors.JLinkWriteException:
+            return False
 
 
 if __name__ == "__main__":
