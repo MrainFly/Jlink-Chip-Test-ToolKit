@@ -16,7 +16,7 @@ class E2J:
     # [{"Level2_x1": "_x1", "Level2_x2": "_x2", "Level2_x3": "_x3"}]},
     # {"Level1_x0": "_x0", "Level1_x1": "_x1", "Level2":
     # [{"Level2_x1": "_x1", "Level2_x2": "_x2", "Level2_x3": "_x3"}]}]}]
-    def __init__(self, excel, header, sheets='all'):
+    def __init__(self, excel, header, sheets='all', exclude=None):
         self._xlrd_handler = None
         self._dist = []
         self._pointer_stack = []
@@ -32,22 +32,67 @@ class E2J:
         else:
             self.sheets = sheets
 
+        if exclude:
+            for i in exclude:
+                try:
+                    self.sheets.remove(i)
+                except ValueError:
+                    pass
+
+        # TODO Priority and Level list check, length equal
+
+        self._ref_list = []
+        for _ in range(max(tuple(j for i in self.header for j in i["Level"]))):
+            self._ref_list.append([])
+        for i in self.header:
+            for l, p in zip(i["Level"], i["Priority"]):
+                self._ref_list[int(l) - 1].append(p)
+
         # Init stack
         self._pointer_stack = [None for _ in range(1 + max(tuple(j for i in self.header for j in i["Level"])))]
         # Convert excel to json
         self._xl2strc()
 
     def _state_machine_level_check(self, row):
-        temp_tuple = tuple(item+1 for item in range(max(tuple(j for i in self.header for j in i["Level"]))))
+        rslt_list = []
+        for _ in range(max(tuple(j for i in self.header for j in i["Level"]))):
+            rslt_list.append([])
+
         for dct in self.header:
-            # corresponding cell have value
-            if row[dct["Num"]].value:
-                temp_tuple = tuple(j for j in dct["Level"] if j in temp_tuple)
-        # Only return the first element
-        if temp_tuple:
-            return temp_tuple[0]
-        else:
-            return None
+            for j, p in zip(dct["Level"], dct["Priority"]):
+                # corresponding cell have value
+                if row[dct["Num"]].value != "":
+                    rslt_list[int(j) - 1].append(p)
+                else:
+                    rslt_list[int(j) - 1].append(None)
+
+        for rslt, ref, num in zip(rslt_list, self._ref_list, range(len(rslt_list))):
+            if self._sub_state_machine_level_check(rslt, ref):
+                return num+1
+
+    def _sub_state_machine_level_check(self, rslt, ref):
+        ret = True
+        for s, f in zip(rslt, ref):
+            if not s:
+                if f == "H":
+                    return False
+                elif f == "M":
+                    ret &= False
+                elif f == "L":
+                    pass
+                else:
+                    raise ValueError
+            else:
+                if f == "H":
+                    return True
+                elif f == "M":
+                    ret &= True
+                elif f == "L":
+                    ret &= True
+                else:
+                    raise ValueError
+
+        return ret
 
     # 核心思想：发现同级别的数据单元时，将栈中同级的数据块填写到上一级块中的缓存单元中
     # eg：当前到Level2，又发现一个符合Level2的单元时，将当前的Level2压入上一层的Level1中的Level list中
