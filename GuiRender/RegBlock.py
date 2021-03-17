@@ -258,14 +258,14 @@ class DisplayTree(ttk.Treeview):
     def _gen_level(self, root):
         # In first level, the module level
         if self._level == 0:
-            self._cur_iid = self.insert(self._parent, "end", iid=None, text=root["Module"], image=self._image_tag[self._level], values=(root["Address Start"], "", ""), tags=self._level)
+            self._cur_iid = self.insert(self._parent, "end", iid=None, text=root["Name"], image=self._image_tag[self._level], values=(root["Address"], "", ""), tags=self._level)
 
             # Exist the children
-            if root["Class"]:
-                self._address = int(root["Address Start"], base=16)
+            if root["Level"]:
+                self._address = int(root["Address"], base=16)
                 self._level += 1
                 self._parent = self._cur_iid
-                self._gen_level(root["Class"])
+                self._gen_level(root["Level"])
             else:
                 # restore
                 self._level = 0
@@ -275,18 +275,18 @@ class DisplayTree(ttk.Treeview):
         else:
             for i in root:
                 # Collect the key in dictionary
-                if 'Sub-Addr\n(Hex)' in i.keys():
-                    sub_addr = int(i['Sub-Addr\n(Hex)'], base=16) + self._address
+                if 'Address' in i.keys():
+                    sub_addr = int(i['Address'], base=16) + self._address
                 else:
                     sub_addr = ""
 
-                if 'Start\nBit' and 'End\nBit' in i.keys():
-                    field = "%d:%d" % (int(i['Start\nBit']), int(i['End\nBit']))
+                if 'Start' and 'End' in i.keys():
+                    field = "%d:%d" % (int(i['Start']), int(i['End']))
                 else:
                     field = ""
 
-                if 'R/W\nProperty' in i.keys():
-                    prop = i['R/W\nProperty']
+                if 'Property' in i.keys():
+                    prop = i['Property']
                 else:
                     prop = ""
 
@@ -302,7 +302,7 @@ class DisplayTree(ttk.Treeview):
 
                 # Insert information into tree view
                 self._cur_iid = self.insert(self._parent, "end", iid=None,
-                                            text=i["Register\nName"], image=self._image_tag[self._level],
+                                            text=i["Name"], image=self._image_tag[self._level],
                                             values=(hex(sub_addr) if sub_addr else sub_addr, field, prop),
                                             tags=self._level)
 
@@ -319,29 +319,29 @@ class DisplayTree(ttk.Treeview):
             self._level -= 1
 
     def _expand(self, i):
-        rslt = self._find_indexs_pattern.search(i["Register\nName"])
+        rslt = self._find_indexs_pattern.search(i["Name"])
 
         # Search the indexs
         if rslt:
             # Collect the key in dictionary
-            if 'Sub-Addr\n(Hex)' in i.keys():
-                sub_addr = int(i['Sub-Addr\n(Hex)'], base=16) + self._address
+            if 'Address' in i.keys():
+                sub_addr = int(i['Address'], base=16) + self._address
             else:
                 sub_addr = ""
 
-            if 'Start\nBit' and 'End\nBit' in i.keys():
-                field = "%d:%d" % (int(i['Start\nBit']), int(i['End\nBit']))
+            if 'Start' and 'End' in i.keys():
+                field = "%d:%d" % (int(i['Start']), int(i['End']))
             else:
                 field = ""
 
-            if 'R/W\nProperty' in i.keys():
-                prop = i['R/W\nProperty']
+            if 'Property' in i.keys():
+                prop = i['Property']
             else:
                 prop = ""
 
             for num in range(int(rslt.group("Number"))):
 
-                name = i["Register\nName"][0: rslt.span()[0]] + str(num)
+                name = i["Name"][0: rslt.span()[0]] + str(num)
 
                 self._cur_iid = self.insert(self._parent, "end", iid=None,
                                             text=name,
@@ -368,22 +368,22 @@ class DisplayTree(ttk.Treeview):
     def _subexpand(self, root, num):
         for i in root:
             # Collect the key in dictionary
-            if 'Sub-Addr\n(Hex)' in i.keys():
-                sub_addr = int(i['Sub-Addr\n(Hex)'], base=16) + self._address
+            if 'Address' in i.keys():
+                sub_addr = int(i['Address'], base=16) + self._address
             else:
                 sub_addr = ""
 
-            if 'Start\nBit' and 'End\nBit' in i.keys():
-                field = "%d:%d" % (int(i['Start\nBit']), int(i['End\nBit']))
+            if 'Start' and 'End' in i.keys():
+                field = "%d:%d" % (int(i['Start']), int(i['End']))
             else:
                 field = ""
 
-            if 'R/W\nProperty' in i.keys():
-                prop = i['R/W\nProperty']
+            if 'Property' in i.keys():
+                prop = i['Property']
             else:
                 prop = ""
 
-            name = self._locate_indexs_pattern.sub(str(num), i["Register\nName"])
+            name = self._locate_indexs_pattern.sub(str(num), i["Name"])
 
             # Insert information into tree view
             self._cur_iid = self.insert(self._parent, "end", iid=None,

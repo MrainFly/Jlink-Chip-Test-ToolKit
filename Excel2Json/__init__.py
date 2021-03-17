@@ -16,7 +16,7 @@ class E2J:
     # [{"Level2_x1": "_x1", "Level2_x2": "_x2", "Level2_x3": "_x3"}]},
     # {"Level1_x0": "_x0", "Level1_x1": "_x1", "Level2":
     # [{"Level2_x1": "_x1", "Level2_x2": "_x2", "Level2_x3": "_x3"}]}]}]
-    def __init__(self, excel, header, sheets='all', exclude=None):
+    def __init__(self, excel, header, reheader, sheets='all', exclude=None):
         self._xlrd_handler = None
         self._dist = []
         self._pointer_stack = []
@@ -27,6 +27,7 @@ class E2J:
             self._xlrd_handler = xlrd.open_workbook(self.excel_path)
 
         self.header = header
+        self.reheader = reheader
         if sheets == "all":
             self.sheets = self._xlrd_handler.sheet_names()
         else:
@@ -116,12 +117,12 @@ class E2J:
                 self._pointer_stack[level] = {}
 
                 # get item of each header and corresponding number
-                for num, dct in enumerate(self.header):
+                for dct, redct, num in zip(self.header, self.reheader, range(max(len(self.header), len(self.reheader)))):
                     # check each item Level
                     if level in dct["Level"]:
                         # add an item to corresponding dictionary
                         # self._pointer_stack[level]
-                        self._pointer_stack[level].update({dct["Key"]: row[dct["Num"]].value})
+                        self._pointer_stack[level].update({redct: row[dct["Num"]].value})
 
                 self._pointer_stack[level].update({"Level": []})
 

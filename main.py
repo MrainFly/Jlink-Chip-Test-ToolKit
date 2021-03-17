@@ -11,13 +11,13 @@ def device_generator():
     memory_header = [{"Key": "Address Start", "Level": (1, ), "Priority": ("M", )},
                      {"Key": "Module", "Level": (1, ), "Priority": ("M", )},
                      {"Key": "Class", "Level": (1, ), "Priority": ("M", )}]
+    memory_reheader = ("Address", "Name", "Class")
     memory_sheets = ("AP Peripheral AddrMapping", "CP Peripheral AddrMapping")
-    memory_e2j = E2J(excel="Venus_SoC_Memory_Mapping.xls", header=memory_header, sheets=memory_sheets)
+    memory_e2j = E2J(excel="Venus_SoC_Memory_Mapping.xls", header=memory_header, sheets=memory_sheets, reheader=memory_reheader)
 
     memory_e2j_list = [i for j in memory_e2j for i in j["Level"] if i["Class"]]
     for i in memory_e2j_list:
-        i["Address Start"] = i["Address Start"].replace("_", "")
-        del i["Level"]
+        i["Address"] = i["Address"].replace("_", "")
 
     header = [{"Key": "Sub-Addr\n(Hex)", "Level": (1,), "Priority": ("H", )},
               {"Key": "Start\nBit", "Level": (2,), "Priority": ("M", )},
@@ -26,16 +26,21 @@ def device_generator():
               {"Key": "Register\nName", "Level": (2, 1), "Priority": ("M", "M")},
               {"Key": "Register Description", "Level": (2, ), "Priority": ("L", )}
               ]
-    e2j = E2J(excel="Venus_SoC_Memory_Mapping.xls", header=header)
+
+    reheader = ("Address", "Start", "End", "Property", "Name", "Description")
+
+    e2j = E2J(excel="Venus_SoC_Memory_Mapping.xls", header=header, reheader=reheader)
     venus_device = []
-    for cla in e2j:
-        for dev in memory_e2j_list:
+    for dev in memory_e2j_list:
+        for cla in e2j:
             if dev["Class"] == cla["Sheet_Name"]:
-                dev["Class"] = cla["Level"]
+                dev["Level"] = cla["Level"]
+                del dev["Class"]
                 venus_device.append(dev)
+                break
 
     def _sort_func(elem):
-        return int(elem["Address Start"], base=16)
+        return int(elem["Address"], base=16)
 
     venus_device.sort(key=_sort_func, reverse=False)
 
